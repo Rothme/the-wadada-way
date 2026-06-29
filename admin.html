@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Wadada Way — Admin</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --green: #006400; --green2: #004d00;
+      --red: #CC0000; --gold: #C9A84C;
+      --white: #FFFFFF; --offwhite: #F5F5F0;
+      --dark: #1A1A1A; --grey: #666; --lightgrey: #E8E8E0;
+      --amber: #e67e22;
+    }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #f0f0eb;
+      color: var(--dark);
+    }
+
+    /* ── TOP BAR ── */
+    .topbar {
+      background: var(--green2);
+      padding: 0 24px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky; top: 0; z-index: 1000;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+    .topbar .logo { font-size: 16px; font-weight: 800; color: var(--white); }
+    .topbar .logo span { color: var(--gold); }
+    .topbar .admin-badge {
+      font-size: 11px; color: rgba(255,255,255,0.7);
+      letter-spacing: 1.5px; text-transform: uppercase;
+    }
+    .topbar .logout-btn {
+      font-size: 13px; color: rgba(255,255,255,0.7);
+      cursor: pointer; text-decoration: underline; background: none; border: none;
+    }
+    .topbar .logout-btn:hover { color: var(--white); }
+
+    /* ── LOGIN ── */
+    #loginOverlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.7);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 9999;
+    }
+    .login-box {
+      background: var(--white);
+      border-radius: 20px;
+      padding: 36px 32px;
+      width: 340px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      text-align: center;
+    }
+    .login-box h2 { font-size: 22px; color: var(--dark); margin-bottom: 6px; }
+    .login-box p { font-size: 13px; color: var(--grey); margin-bottom: 24px; }
+    .login-box input {
+      width: 100%; padding: 13px 14px;
+      font-size: 16px; border: 2px solid var(--lightgrey);
+      border-radius: 10px; outline: none; margin-bottom: 14px;
+      text-align: center; letter-spacing: 2px;
+    }
+    .login-box input:focus { border-color: var(--green); }
+    .login-box button {
+      width: 100%; padding: 14px;
+      background: var(--green); color: var(--white);
+      font-size: 15px; font-weight: 700;
+      border: none; border-radius: 10px; cursor: pointer;
+    }
+    .login-box .err { color: var(--red); font-size: 13px; margin-top: 8px; }
+
+    /* ── LAYOUT ── */
+    .layout { display: flex; min-height: calc(100vh - 56px); }
+    .sidebar {
+      width: 220px; background: var(--white);
+      border-right: 1px solid var(--lightgrey);
+      padding: 20px 0; flex-shrink: 0;
+    }
+    .sidebar .nav-item {
+      padding: 12px 20px;
+      font-size: 14px; font-weight: 600;
+      color: var(--grey); cursor: pointer;
+      display: flex; align-items: center; gap: 10px;
+      border-left: 3px solid transparent;
+      transition: all 0.15s;
+    }
+    .sidebar .nav-item:hover { color: var(--green); background: rgba(0,100,0,0.04); }
+    .sidebar .nav-item.active {
+      color: var(--green); background: rgba(0,100,0,0.06);
+      border-left-color: var(--green);
+    }
+    .sidebar .nav-label { font-size: 10px; color: var(--lightgrey); letter-spacing: 1px; text-transform: uppercase; padding: 16px 20px 4px; }
+
+    .main { flex: 1; padding: 24px; overflow-y: auto; }
+
+    /* ── STAT CARDS ── */
+    .stat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+    .stat-card {
+      background: var(--white);
+      border-radius: 14px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .stat-card .label { font-size: 11px; color: var(--grey); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 8px; }
+    .stat-card .num { font-size: 32px; font-weight: 800; color: var(--green); }
+    .stat-card .sub { font-size: 12px; color: var(--grey); margin-top: 4px; }
+    .stat-card.red .num { color: var(--red); }
+    .stat-card.amber .num { color: var(--amber); }
+    .stat-card.gold .num { color: var(--gold); }
+
+    /* ── SECTIONS ── */
+    .section { display: none; }
+    .section.active { display: block; }
+    .section-header {
+      font-size: 20px; font-weight: 800;
+      color: var(--dark); margin-bottom: 6px;
+    }
+    .section-sub { font-size: 13px; color: var(--grey); margin-bottom: 24px; }
+
+    /* ── MAP ── */
+    #nasarawaMap {
+      height: 480px;
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+    }
+    .map-legend {
+      display: flex; gap: 16px; margin-top: 12px;
+      flex-wrap: wrap;
+    }
+    .legend-item { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--grey); }
+    .legend-dot { width: 14px; height: 14px; border-radius: 50%; }
+
+    /* ── TABLES ── */
+    .card-box {
+      background: var(--white);
+      border-radius: 14px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+    .card-box-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--lightgrey);
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .card-box-header h3 { font-size: 15px; font-weight: 700; color: var(--dark); }
+    .card-box-header .meta { font-size: 12px; color: var(--grey); }
+    table { width: 100%; border-collapse: collapse; }
+    th {
+      text-align: left; padding: 12px 16px;
+      font-size: 11px; color: var(--grey);
+      text-transform: uppercase; letter-spacing: 0.5px;
+      background: #fafaf8;
+      border-bottom: 1px solid var(--lightgrey);
+    }
+    td {
+      padding: 12px 16px;
+      font-size: 13px; color: var(--dark);
+      border-bottom: 1px solid #f0f0eb;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(0,100,0,0.03); }
+
+    .badge {
+      display: inline-block; padding: 3px 10px;
+      border-radius: 20px; font-size: 11px; font-weight: 700;
+    }
+    .badge-green { background: rgba(0,100,0,0.12); color: var(--green); }
+    .badge-red { background: rgba(204,0,0,0.12); color: var(--red); }
+    .badge-amber { background: rgba(230,126,34,0.12); color: var(--amber); }
+
+    /* ── CODE GENERATOR ── */
+    .gen-form { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+    .gen-field label { display: block; font-size: 12px; color: var(--grey); margin-bottom: 6px; font-weight: 600; }
+    .gen-field input, .gen-field select {
+      width: 100%; padding: 11px 13px;
+      font-size: 14px; border: 2px solid var(--lightgrey);
+      border-radius: 10px; outline: none;
+    }
+    .gen-field input:focus, .gen-field select:focus { border-color: var(--green); }
+    .btn-gen {
+      padding: 12px 24px; background: var(--green); color: var(--white);
+      font-size: 14px; font-weight: 700; border: none; border-radius: 10px; cursor: pointer;
+    }
+    .codes-output {
+      background: var(--offwhite);
+      border: 1px solid var(--lightgrey);
+      border-radius: 10px;
+      padding: 16px;
+      font-family: monospace; font-size: 13px;
+      line-height: 1.8; color: var(--dark);
+      min-height: 60px; white-space: pre-wrap;
+    }
+    .btn-copy {
+      margin-top: 10px; padding: 10px 20px;
+      background: transparent; border: 2px solid var(--green);
+      color: var(--green); font-size: 13px; font-weight: 600;
+      border-radius: 8px; cursor: pointer;
+    }
+
+    /* ── REFRESH ── */
+    .refresh-btn {
+      padding: 8px 16px; background: transparent;
+      border: 1.5px solid var(--lightgrey); color: var(--grey);
+      font-size: 12px; border-radius: 8px; cursor: pointer;
+    }
+    .refresh-btn:hover { border-color: var(--green); color: var(--green); }
+  </style>
+</head>
+<body>
+
+<!-- ── LOGIN OVERLAY ── -->
+<div id="loginOverlay">
+  <div class="login-box">
+    <div style="font-size:40px;margin-bottom:12px;">🔐</div>
+    <h2>Admin Access</h2>
+    <p>The Wadada Way — Campaign Intelligence</p>
+    <input type="password" id="adminPwd" placeholder="Enter password" autocomplete="off">
+    <button onclick="adminLogin()">LOGIN</button>
+    <div class="err" id="loginErr"></div>
+  </div>
+</div>
+
+<div class="topbar">
+  <div class="logo">The Wadada <span>Way</span></div>
+  <div class="admin-badge">Campaign Intelligence</div>
+  <button class="logout-btn" onclick="adminLogout()">Logout</button>
+</div>
+
+<div class="layout">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="nav-label">Overview</div>
+    <div class="nav-item active" onclick="showSection('overview')">📊 Dashboard</div>
+    <div class="nav-item" onclick="showSection('map')">🗺️ Hostility Map</div>
+    <div class="nav-label">Operations</div>
+    <div class="nav-item" onclick="showSection('locations')">📍 Locations</div>
+    <div class="nav-item" onclick="showSection('agents')">👥 Agents</div>
+    <div class="nav-label">Tools</div>
+    <div class="nav-item" onclick="showSection('codes')">🔢 Code Generator</div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="main">
+
+    <!-- OVERVIEW -->
+    <div class="section active" id="sec-overview">
+      <div class="section-header">Campaign Dashboard</div>
+      <div class="section-sub">Real-time scan intelligence across Nasarawa West — <span id="lastRefresh">loading...</span></div>
+
+      <div class="stat-row">
+        <div class="stat-card">
+          <div class="label">Total Scans</div>
+          <div class="num" id="stat-totalScans">—</div>
+          <div class="sub">All time</div>
+        </div>
+        <div class="stat-card gold">
+          <div class="label">Stickers Deployed</div>
+          <div class="num" id="stat-stickers">—</div>
+          <div class="sub">Across Nasarawa West</div>
+        </div>
+        <div class="stat-card amber">
+          <div class="label">Hostile Zones</div>
+          <div class="num" id="stat-hostile">—</div>
+          <div class="sub">0 scans after 7 days</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Active Agents</div>
+          <div class="num" id="stat-agents">—</div>
+          <div class="sub">Registered</div>
+        </div>
+      </div>
+
+      <div class="card-box">
+        <div class="card-box-header">
+          <h3>Recent Scan Activity</h3>
+          <button class="refresh-btn" onclick="loadDashboard()">↻ Refresh</button>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Code</th><th>Location</th><th>LGA</th><th>Topic</th><th>Time</th>
+            </tr>
+          </thead>
+          <tbody id="recentScans">
+            <tr><td colspan="5" style="color:var(--grey);text-align:center;padding:24px;">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card-box">
+        <div class="card-box-header">
+          <h3>Top Topics Searched</h3>
+        </div>
+        <table>
+          <thead>
+            <tr><th>Topic</th><th>Scans</th><th>% of Total</th></tr>
+          </thead>
+          <tbody id="topTopics">
+            <tr><td colspan="3" style="color:var(--grey);text-align:center;padding:24px;">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- MAP -->
+    <div class="section" id="sec-map">
+      <div class="section-header">Nasarawa West Hostility Map</div>
+      <div class="section-sub">Sticker locations coloured by scan activity. Red = no engagement after 7 days. Reassign field agents to hostile zones.</div>
+      <div id="nasarawaMap"></div>
+      <div class="map-legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#006400"></div> Active (1+ scans)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#e67e22"></div> Quiet (deployed, 0 scans)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#CC0000"></div> Hostile (7+ days, 0 scans)</div>
+      </div>
+    </div>
+
+    <!-- LOCATIONS -->
+    <div class="section" id="sec-locations">
+      <div class="section-header">All Sticker Locations</div>
+      <div class="section-sub">Every registered sticker across Nasarawa West</div>
+      <div class="card-box">
+        <div class="card-box-header">
+          <h3>Location Registry</h3>
+          <button class="refresh-btn" onclick="loadLocations()">↻ Refresh</button>
+        </div>
+        <table>
+          <thead>
+            <tr><th>Code</th><th>Location</th><th>LGA</th><th>Ward</th><th>Agent</th><th>Scans</th><th>Status</th></tr>
+          </thead>
+          <tbody id="locationsTable">
+            <tr><td colspan="7" style="color:var(--grey);text-align:center;padding:24px;">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- AGENTS -->
+    <div class="section" id="sec-agents">
+      <div class="section-header">Field Agents</div>
+      <div class="section-sub">Performance by agent</div>
+      <div class="card-box">
+        <div class="card-box-header">
+          <h3>Agent Performance</h3>
+          <button class="refresh-btn" onclick="loadAgents()">↻ Refresh</button>
+        </div>
+        <table>
+          <thead>
+            <tr><th>Agent</th><th>ID</th><th>Stickers</th><th>Total Scans</th><th>Active Locations</th><th>Last Active</th></tr>
+          </thead>
+          <tbody id="agentsTable">
+            <tr><td colspan="6" style="color:var(--grey);text-align:center;padding:24px;">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- CODE GENERATOR -->
+    <div class="section" id="sec-codes">
+      <div class="section-header">Batch Code Generator</div>
+      <div class="section-sub">Generate unique sticker codes for field agents. Codes are printed once and written manually on stickers.</div>
+      <div class="card-box" style="padding:24px;">
+        <div class="gen-form">
+          <div class="gen-field">
+            <label>PREFIX</label>
+            <select id="genPrefix">
+              <option value="NW">NW (Nasarawa West)</option>
+              <option value="KF">KF (Keffi)</option>
+              <option value="KR">KR (Karu)</option>
+              <option value="KK">KK (Kokona)</option>
+              <option value="NS">NS (Nasarawa LGA)</option>
+              <option value="TO">TO (Toto)</option>
+            </select>
+          </div>
+          <div class="gen-field">
+            <label>STARTING NUMBER</label>
+            <input type="number" id="genStart" value="1" min="1" max="999">
+          </div>
+          <div class="gen-field">
+            <label>HOW MANY CODES</label>
+            <input type="number" id="genCount" value="20" min="1" max="200">
+          </div>
+        </div>
+        <button class="btn-gen" onclick="generateCodes()">Generate Codes</button>
+        <div style="margin-top:20px;">
+          <div style="font-size:13px;font-weight:700;color:var(--dark);margin-bottom:8px;">Generated Codes</div>
+          <div class="codes-output" id="codesOutput">Codes will appear here...</div>
+          <button class="btn-copy" onclick="copyCodes()">Copy All Codes</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const ADMIN_PWD = 'Beckham';
+  let mapInstance = null;
+  let mapMarkers = [];
+
+  // ── AUTH ──
+  function adminLogin() {
+    const pwd = document.getElementById('adminPwd').value;
+    if (pwd === ADMIN_PWD) {
+      document.getElementById('loginOverlay').style.display = 'none';
+      sessionStorage.setItem('wadada_admin', '1');
+      loadDashboard();
+    } else {
+      document.getElementById('loginErr').textContent = 'Incorrect password.';
+    }
+  }
+
+  function adminLogout() {
+    sessionStorage.removeItem('wadada_admin');
+    document.getElementById('loginOverlay').style.display = 'flex';
+    document.getElementById('adminPwd').value = '';
+  }
+
+  document.getElementById('adminPwd').addEventListener('keydown', e => {
+    if (e.key === 'Enter') adminLogin();
+  });
+
+  if (sessionStorage.getItem('wadada_admin')) {
+    document.getElementById('loginOverlay').style.display = 'none';
+    loadDashboard();
+  }
+
+  // ── NAVIGATION ──
+  function showSection(id) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('sec-' + id).classList.add('active');
+    event.currentTarget.classList.add('active');
+
+    if (id === 'map') initMap();
+    if (id === 'locations') loadLocations();
+    if (id === 'agents') loadAgents();
+  }
+
+  // ── LOAD DASHBOARD ──
+  async function loadDashboard() {
+    document.getElementById('lastRefresh').textContent = 'Updated ' + new Date().toLocaleTimeString();
+    try {
+      const resp = await fetch('/api/admin/stats', {
+        headers: { 'X-Admin-Auth': 'Beckham' }
+      });
+      const data = await resp.json();
+
+      document.getElementById('stat-totalScans').textContent = data.totalScans ?? 0;
+      document.getElementById('stat-stickers').textContent = data.totalStickers ?? 0;
+      document.getElementById('stat-hostile').textContent = data.hostileZones ?? 0;
+      document.getElementById('stat-agents').textContent = data.totalAgents ?? 0;
+
+      // Recent scans
+      const recentBody = document.getElementById('recentScans');
+      if (data.recentScans && data.recentScans.length) {
+        recentBody.innerHTML = data.recentScans.map(s => `
+          <tr>
+            <td><code style="color:var(--green);font-weight:700">${s.code}</code></td>
+            <td>${s.location || '—'}</td>
+            <td>${s.lga || '—'}</td>
+            <td>${s.topic ? '<span class="badge badge-green">' + s.topic + '</span>' : '—'}</td>
+            <td style="color:var(--grey)">${fmtTime(s.ts)}</td>
+          </tr>
+        `).join('');
+      } else {
+        recentBody.innerHTML = '<tr><td colspan="5" style="color:var(--grey);text-align:center;padding:24px;">No scans yet.</td></tr>';
+      }
+
+      // Top topics
+      const topicsBody = document.getElementById('topTopics');
+      if (data.topTopics && data.topTopics.length) {
+        const total = data.topTopics.reduce((s, t) => s + t.count, 0);
+        topicsBody.innerHTML = data.topTopics.map(t => `
+          <tr>
+            <td><strong>${t.topic}</strong></td>
+            <td>${t.count}</td>
+            <td>${total ? Math.round(t.count / total * 100) + '%' : '—'}</td>
+          </tr>
+        `).join('');
+      } else {
+        topicsBody.innerHTML = '<tr><td colspan="3" style="color:var(--grey);text-align:center;padding:24px;">No topic data yet.</td></tr>';
+      }
+    } catch(e) {
+      document.getElementById('stat-totalScans').textContent = '—';
+    }
+  }
+
+  async function loadLocations() {
+    try {
+      const resp = await fetch('/api/admin/locations', {
+        headers: { 'X-Admin-Auth': 'Beckham' }
+      });
+      const data = await resp.json();
+      const tbody = document.getElementById('locationsTable');
+      if (data.locations && data.locations.length) {
+        tbody.innerHTML = data.locations.map(l => {
+          const hostile = l.scans === 0 && l.daysDeployed >= 7;
+          const statusBadge = l.scans > 0
+            ? '<span class="badge badge-green">Active</span>'
+            : hostile
+              ? '<span class="badge badge-red">Hostile</span>'
+              : '<span class="badge badge-amber">Pending</span>';
+          return `
+            <tr>
+              <td><code style="color:var(--green);font-weight:700">${l.code}</code></td>
+              <td>${l.location}</td>
+              <td>${l.lga}</td>
+              <td>${l.ward || '—'}</td>
+              <td>${l.agent}</td>
+              <td><strong>${l.scans || 0}</strong></td>
+              <td>${statusBadge}</td>
+            </tr>
+          `;
+        }).join('');
+      } else {
+        tbody.innerHTML = '<tr><td colspan="7" style="color:var(--grey);text-align:center;padding:24px;">No stickers registered yet.</td></tr>';
+      }
+    } catch(e) {}
+  }
+
+  async function loadAgents() {
+    try {
+      const resp = await fetch('/api/admin/agents', {
+        headers: { 'X-Admin-Auth': 'Beckham' }
+      });
+      const data = await resp.json();
+      const tbody = document.getElementById('agentsTable');
+      if (data.agents && data.agents.length) {
+        tbody.innerHTML = data.agents.map(a => `
+          <tr>
+            <td><strong>${a.name}</strong></td>
+            <td style="font-family:monospace;font-size:12px;color:var(--grey)">${a.agentId}</td>
+            <td>${a.stickers || 0}</td>
+            <td><strong>${a.totalScans || 0}</strong></td>
+            <td>${a.activeLocations || 0}</td>
+            <td style="color:var(--grey)">${fmtTime(a.lastActive)}</td>
+          </tr>
+        `).join('');
+      } else {
+        tbody.innerHTML = '<tr><td colspan="6" style="color:var(--grey);text-align:center;padding:24px;">No agents registered yet.</td></tr>';
+      }
+    } catch(e) {}
+  }
+
+  // ── MAP ──
+  function initMap() {
+    if (mapInstance) {
+      mapInstance.invalidateSize();
+      return;
+    }
+    // Centre on Lafia, Nasarawa State
+    mapInstance = L.map('nasarawaMap').setView([8.4944, 8.5227], 9);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap',
+      maxZoom: 17
+    }).addTo(mapInstance);
+
+    // LGA reference markers
+    const lgas = [
+      { name: 'Keffi', lat: 8.8470, lng: 7.8735 },
+      { name: 'Karu', lat: 8.7500, lng: 7.9833 },
+      { name: 'Kokona', lat: 8.7000, lng: 8.0500 },
+      { name: 'Nasarawa', lat: 8.4957, lng: 7.8961 },
+      { name: 'Toto', lat: 8.3667, lng: 8.0333 },
+    ];
+    lgas.forEach(l => {
+      L.circleMarker([l.lat, l.lng], {
+        radius: 18,
+        fillColor: 'rgba(0,100,0,0.08)',
+        color: '#006400',
+        weight: 1.5,
+        fillOpacity: 1
+      }).addTo(mapInstance)
+        .bindPopup(`<strong>${l.name} LGA</strong><br>Nasarawa West`);
+
+      L.marker([l.lat, l.lng], {
+        icon: L.divIcon({
+          html: `<div style="font-size:11px;font-weight:700;color:#006400;white-space:nowrap;">${l.name}</div>`,
+          className: '', iconAnchor: [0, 0]
+        })
+      }).addTo(mapInstance);
+    });
+
+    loadMapData();
+  }
+
+  async function loadMapData() {
+    if (!mapInstance) return;
+    try {
+      const resp = await fetch('/api/admin/locations', {
+        headers: { 'X-Admin-Auth': 'Beckham' }
+      });
+      const data = await resp.json();
+      mapMarkers.forEach(m => m.remove());
+      mapMarkers = [];
+
+      if (data.locations) {
+        data.locations.forEach(l => {
+          if (!l.lat || !l.lng) return;
+          const hostile = l.scans === 0 && l.daysDeployed >= 7;
+          const color = l.scans > 0 ? '#006400' : hostile ? '#CC0000' : '#e67e22';
+          const m = L.circleMarker([l.lat, l.lng], {
+            radius: 10, fillColor: color,
+            color: '#fff', weight: 2, fillOpacity: 0.9
+          }).addTo(mapInstance);
+          m.bindPopup(`<strong>${l.code}</strong><br>${l.location}<br>${l.lga} LGA<br>Scans: <strong>${l.scans || 0}</strong>`);
+          mapMarkers.push(m);
+        });
+      }
+    } catch(e) {}
+  }
+
+  // ── CODE GENERATOR ──
+  function generateCodes() {
+    const prefix = document.getElementById('genPrefix').value;
+    const start = parseInt(document.getElementById('genStart').value) || 1;
+    const count = Math.min(parseInt(document.getElementById('genCount').value) || 20, 200);
+    const codes = [];
+    for (let i = start; i < start + count; i++) {
+      codes.push(`${prefix}-${String(i).padStart(3, '0')}`);
+    }
+    document.getElementById('codesOutput').textContent = codes.join('\n');
+  }
+
+  function copyCodes() {
+    const text = document.getElementById('codesOutput').textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = event.currentTarget;
+      btn.textContent = '✅ Copied!';
+      setTimeout(() => btn.textContent = 'Copy All Codes', 2000);
+    });
+  }
+
+  // ── UTILS ──
+  function fmtTime(ts) {
+    if (!ts) return '—';
+    try {
+      const d = new Date(ts);
+      return d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } catch(e) { return ts; }
+  }
+</script>
+</body>
+</html>

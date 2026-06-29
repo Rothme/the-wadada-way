@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>The Wadada Way</title>
+  <meta name="description" content="Tireless servant of the people of Nasarawa State. See what Senator Wadada has done for you.">
+  <meta property="og:title" content="The Wadada Way">
+  <meta property="og:description" content="Tireless servant of the people of Nasarawa State.">
+  <meta property="og:image" content="https://the-wadada-way.pages.dev/wadada.jpg">
+  <meta property="og:type" content="website">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --green:  #006400;
+      --green2: #004d00;
+      --red:    #CC0000;
+      --gold:   #C9A84C;
+      --gold2:  #a8892e;
+      --white:  #FFFFFF;
+      --offwhite: #F5F5F0;
+      --dark:   #1A1A1A;
+      --grey:   #666666;
+      --lightgrey: #E8E8E0;
+    }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: var(--offwhite);
+      color: var(--dark);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* ── TOP BAND ── */
+    .top-band {
+      width: 100%;
+      background: var(--green);
+      padding: 6px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .top-band .party-tag {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--gold);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+    .top-band .district-tag {
+      font-size: 10px;
+      color: rgba(255,255,255,0.8);
+      letter-spacing: 0.5px;
+    }
+
+    /* ── SCREENS ── */
+    .screen { display: none; width: 100%; max-width: 420px; padding: 0 0 40px; }
+    .screen.active { display: flex; flex-direction: column; align-items: center; }
+
+    /* ── HERO CARD ── */
+    .hero-card {
+      width: 100%;
+      background: linear-gradient(160deg, var(--green2) 0%, var(--green) 60%, #008000 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 28px 20px 20px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-card::before {
+      content: '';
+      position: absolute;
+      top: -40px; right: -40px;
+      width: 160px; height: 160px;
+      border-radius: 50%;
+      background: rgba(201,168,76,0.12);
+    }
+    .hero-card::after {
+      content: '';
+      position: absolute;
+      bottom: -30px; left: -30px;
+      width: 120px; height: 120px;
+      border-radius: 50%;
+      background: rgba(204,0,0,0.10);
+    }
+
+    .senator-photo {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      object-fit: cover;
+      object-position: center top;
+      border: 4px solid var(--gold);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+      position: relative;
+      z-index: 1;
+    }
+    .hero-name {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--white);
+      margin-top: 14px;
+      text-align: center;
+      letter-spacing: 0.3px;
+      position: relative;
+      z-index: 1;
+    }
+    .hero-title {
+      font-size: 12px;
+      color: var(--gold);
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-top: 4px;
+      text-align: center;
+      position: relative;
+      z-index: 1;
+    }
+    .hero-subtitle {
+      font-size: 13px;
+      color: rgba(255,255,255,0.85);
+      margin-top: 6px;
+      text-align: center;
+      line-height: 1.4;
+      position: relative;
+      z-index: 1;
+    }
+    .gold-divider {
+      width: 60px;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+      margin: 12px auto 0;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ── CODE ENTRY ── */
+    .code-section {
+      width: 100%;
+      padding: 24px 20px 0;
+    }
+    .code-label {
+      font-size: 13px;
+      color: var(--grey);
+      text-align: center;
+      margin-bottom: 14px;
+      line-height: 1.5;
+    }
+    .code-label strong { color: var(--dark); }
+
+    .code-row {
+      display: flex;
+      gap: 10px;
+    }
+    .code-input {
+      flex: 1;
+      padding: 14px 16px;
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      border: 2px solid var(--lightgrey);
+      border-radius: 10px;
+      background: var(--white);
+      color: var(--dark);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .code-input:focus { border-color: var(--green); }
+    .code-input.error { border-color: var(--red); animation: shake 0.3s; }
+
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      25% { transform: translateX(-6px); }
+      75% { transform: translateX(6px); }
+    }
+
+    .btn-go {
+      padding: 14px 22px;
+      background: var(--green);
+      color: var(--white);
+      font-size: 15px;
+      font-weight: 700;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      letter-spacing: 1px;
+      transition: background 0.2s;
+    }
+    .btn-go:hover { background: var(--green2); }
+    .btn-go:active { transform: scale(0.97); }
+
+    .code-error {
+      color: var(--red);
+      font-size: 12px;
+      text-align: center;
+      margin-top: 8px;
+      min-height: 18px;
+    }
+
+    .skip-link {
+      text-align: center;
+      margin-top: 20px;
+    }
+    .skip-link a {
+      color: var(--grey);
+      font-size: 13px;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+
+    /* ── TOPIC SELECTOR (Screen 2) ── */
+    .screen2-header {
+      width: 100%;
+      background: var(--green);
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .screen2-photo {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      object-fit: cover;
+      object-position: center top;
+      border: 2px solid var(--gold);
+      flex-shrink: 0;
+    }
+    .screen2-info {}
+    .screen2-name {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--white);
+    }
+    .screen2-tagline {
+      font-size: 11px;
+      color: var(--gold);
+      margin-top: 2px;
+    }
+
+    .topics-intro {
+      font-size: 14px;
+      color: var(--grey);
+      text-align: center;
+      padding: 20px 20px 4px;
+      line-height: 1.5;
+    }
+    .topics-intro strong { color: var(--dark); }
+
+    .hearts-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      padding: 16px 20px;
+      width: 100%;
+    }
+
+    .hearts-btn {
+      background: var(--white);
+      border: 2px solid var(--lightgrey);
+      border-radius: 14px;
+      padding: 18px 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: all 0.18s;
+      text-align: center;
+    }
+    .hearts-btn:hover {
+      border-color: var(--green);
+      box-shadow: 0 4px 16px rgba(0,100,0,0.15);
+      transform: translateY(-2px);
+    }
+    .hearts-btn:active { transform: scale(0.97); }
+
+    .hearts-btn .letter {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: 900;
+      color: var(--white);
+    }
+    .hearts-btn.h .letter { background: var(--green); }
+    .hearts-btn.e .letter { background: var(--red); }
+    .hearts-btn.a .letter { background: #2d7a00; }
+    .hearts-btn.r .letter { background: var(--gold2); }
+    .hearts-btn.t .letter { background: #1a5276; }
+    .hearts-btn.s .letter { background: #7b0000; }
+
+    .hearts-btn .btn-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--dark);
+      line-height: 1.2;
+    }
+    .hearts-btn .btn-sub {
+      font-size: 10px;
+      color: var(--grey);
+      line-height: 1.3;
+    }
+    .hearts-btn .btn-count {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--green);
+    }
+
+    .or-divider {
+      width: 100%;
+      padding: 4px 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .or-divider span { font-size: 12px; color: var(--grey); white-space: nowrap; }
+    .or-divider::before, .or-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--lightgrey);
+    }
+
+    .free-text-row {
+      display: flex;
+      gap: 10px;
+      padding: 0 20px;
+      width: 100%;
+    }
+    .free-input {
+      flex: 1;
+      padding: 13px 14px;
+      font-size: 14px;
+      border: 2px solid var(--lightgrey);
+      border-radius: 10px;
+      background: var(--white);
+      color: var(--dark);
+      outline: none;
+    }
+    .free-input:focus { border-color: var(--green); }
+    .btn-ask {
+      padding: 13px 16px;
+      background: var(--gold);
+      color: var(--white);
+      font-size: 18px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    .btn-ask:active { transform: scale(0.97); }
+
+    /* ── LOADING ── */
+    .loading-screen {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 300px;
+      gap: 16px;
+      padding: 40px 20px;
+    }
+    .loading-screen.active { display: flex; }
+    .spinner {
+      width: 44px;
+      height: 44px;
+      border: 4px solid var(--lightgrey);
+      border-top-color: var(--green);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text { font-size: 14px; color: var(--grey); }
+
+    /* ── RESULT CARD (Screen 3) ── */
+    .result-header {
+      width: 100%;
+      background: var(--green);
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .result-body {
+      width: 100%;
+      padding: 20px;
+    }
+    .result-topic-tag {
+      display: inline-block;
+      background: var(--green);
+      color: var(--white);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 4px 12px;
+      border-radius: 20px;
+      margin-bottom: 14px;
+    }
+    .result-text {
+      font-size: 15px;
+      line-height: 1.7;
+      color: var(--dark);
+      background: var(--white);
+      border-radius: 12px;
+      padding: 18px;
+      border-left: 4px solid var(--green);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+
+    /* ── SHARE CARD ── */
+    .share-card {
+      margin: 20px;
+      width: calc(100% - 40px);
+      background: linear-gradient(135deg, var(--green2) 0%, var(--green) 100%);
+      border-radius: 16px;
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      position: relative;
+      overflow: hidden;
+    }
+    .share-card::before {
+      content: '';
+      position: absolute;
+      top: -20px; right: -20px;
+      width: 100px; height: 100px;
+      border-radius: 50%;
+      background: rgba(201,168,76,0.15);
+    }
+    .share-card-photo {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      object-fit: cover;
+      object-position: center top;
+      border: 3px solid var(--gold);
+      flex-shrink: 0;
+      position: relative;
+      z-index: 1;
+    }
+    .share-card-text { position: relative; z-index: 1; }
+    .share-card-name {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--white);
+    }
+    .share-card-sub {
+      font-size: 11px;
+      color: var(--gold);
+      margin-top: 2px;
+    }
+    .share-card-url {
+      font-size: 10px;
+      color: rgba(255,255,255,0.6);
+      margin-top: 6px;
+    }
+
+    .btn-share {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin: 0 20px;
+      width: calc(100% - 40px);
+      padding: 15px;
+      background: #25D366;
+      color: var(--white);
+      font-size: 15px;
+      font-weight: 700;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .btn-share:active { transform: scale(0.97); }
+
+    .btn-again {
+      margin-top: 16px;
+      background: none;
+      border: 2px solid var(--green);
+      color: var(--green);
+      font-size: 14px;
+      font-weight: 600;
+      padding: 12px 28px;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    .btn-again:active { transform: scale(0.97); }
+
+    /* ── FOOTER ── */
+    .page-footer {
+      width: 100%;
+      max-width: 420px;
+      text-align: center;
+      padding: 20px;
+      font-size: 11px;
+      color: var(--grey);
+    }
+    .page-footer .powered {
+      color: var(--gold2);
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+
+<div class="top-band">
+  <span class="party-tag">APC · Nasarawa 2027</span>
+  <span class="district-tag">Nasarawa West Senatorial District</span>
+</div>
+
+<!-- ═══════════════════════════════════════
+     SCREEN 1 — CODE ENTRY
+═══════════════════════════════════════ -->
+<div class="screen active" id="screen1">
+
+  <div class="hero-card">
+    <img class="senator-photo" src="wadada.jpg" alt="Senator Ahmed Wadada Aliyu">
+    <div class="hero-name">The Wadada Way</div>
+    <div class="hero-title">Sarkin Yakin Keffi</div>
+    <div class="hero-subtitle">Tireless servant of the people of Nasarawa State</div>
+    <div class="gold-divider"></div>
+  </div>
+
+  <div class="code-section">
+    <p class="code-label">
+      <strong>Enter the code on the sticker</strong><br>
+      to see what Senator Wadada has done in your area
+    </p>
+    <div class="code-row">
+      <input
+        class="code-input"
+        id="codeInput"
+        type="text"
+        maxlength="10"
+        placeholder="NW-001"
+        autocomplete="off"
+        autocorrect="off"
+        spellcheck="false"
+      >
+      <button class="btn-go" onclick="submitCode()">GO</button>
+    </div>
+    <div class="code-error" id="codeError"></div>
+    <div class="skip-link">
+      <a onclick="goToTopics()">Skip — I don't have a code</a>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     SCREEN 2 — TOPIC SELECTOR
+═══════════════════════════════════════ -->
+<div class="screen" id="screen2">
+
+  <div class="screen2-header">
+    <img class="screen2-photo" src="wadada.jpg" alt="Senator Wadada">
+    <div class="screen2-info">
+      <div class="screen2-name">Sen. Ahmed Wadada Aliyu</div>
+      <div class="screen2-tagline">What has Wadada done for Nasarawa?</div>
+    </div>
+  </div>
+
+  <p class="topics-intro">
+    <strong>Pick a topic</strong> to see his record, or type your own question below
+  </p>
+
+  <div class="hearts-grid">
+    <div class="hearts-btn h" onclick="selectTopic('human')">
+      <div class="letter">H</div>
+      <div class="btn-label">Human Capital</div>
+      <div class="btn-sub">Education, Health & Youth</div>
+      <div class="btn-count">1,244+ students</div>
+    </div>
+    <div class="hearts-btn e" onclick="selectTopic('energy')">
+      <div class="letter">E</div>
+      <div class="btn-label">Energy & Minerals</div>
+      <div class="btn-sub">Power & Resources</div>
+      <div class="btn-count">20 transformers</div>
+    </div>
+    <div class="hearts-btn a" onclick="selectTopic('agriculture')">
+      <div class="letter">A</div>
+      <div class="btn-label">Agriculture</div>
+      <div class="btn-sub">Food Security</div>
+      <div class="btn-count">10,000 bags rice</div>
+    </div>
+    <div class="hearts-btn r" onclick="selectTopic('rural')">
+      <div class="letter">R</div>
+      <div class="btn-label">Rural Dev</div>
+      <div class="btn-sub">Roads & Infrastructure</div>
+      <div class="btn-count">118km road</div>
+    </div>
+    <div class="hearts-btn t" onclick="selectTopic('trade')">
+      <div class="letter">T</div>
+      <div class="btn-label">Trade & Economy</div>
+      <div class="btn-sub">Investment & Industry</div>
+      <div class="btn-count">Bills passed</div>
+    </div>
+    <div class="hearts-btn s" onclick="selectTopic('security')">
+      <div class="letter">S</div>
+      <div class="btn-label">Security</div>
+      <div class="btn-sub">Safety & Protection</div>
+      <div class="btn-count">Motions & action</div>
+    </div>
+  </div>
+
+  <div class="or-divider"><span>or ask directly</span></div>
+
+  <div class="free-text-row">
+    <input
+      class="free-input"
+      id="freeInput"
+      type="text"
+      placeholder="e.g. What has he done for Keffi?"
+    >
+    <button class="btn-ask" onclick="askFree()">→</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     LOADING
+═══════════════════════════════════════ -->
+<div class="loading-screen" id="loadingScreen">
+  <img class="senator-photo" src="wadada.jpg" alt="Senator Wadada" style="width:72px;height:72px;">
+  <div class="spinner"></div>
+  <div class="loading-text" id="loadingText">Searching Wadada's record...</div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     SCREEN 3 — RESULT
+═══════════════════════════════════════ -->
+<div class="screen" id="screen3">
+
+  <div class="result-header">
+    <img class="screen2-photo" src="wadada.jpg" alt="Senator Wadada">
+    <div class="screen2-info">
+      <div class="screen2-name">The Wadada Way</div>
+      <div class="screen2-tagline">Tireless servant of the people</div>
+    </div>
+  </div>
+
+  <div class="result-body">
+    <div class="result-topic-tag" id="resultTag">HUMAN CAPITAL</div>
+    <div class="result-text" id="resultText"></div>
+  </div>
+
+  <div class="share-card">
+    <img class="share-card-photo" src="wadada.jpg" alt="Senator Wadada">
+    <div class="share-card-text">
+      <div class="share-card-name">Sen. Ahmed Wadada Aliyu</div>
+      <div class="share-card-sub">Sarkin Yakin Keffi · APC · Nasarawa 2027</div>
+      <div class="share-card-url">the-wadada-way.pages.dev</div>
+    </div>
+  </div>
+
+  <a class="btn-share" id="whatsappBtn" href="#" target="_blank">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+    </svg>
+    Share on WhatsApp
+  </a>
+
+  <button class="btn-again" onclick="resetToTopics()">← Ask Another Question</button>
+
+</div>
+
+<div class="page-footer">
+  <span class="powered">The Wadada Way</span> · Nasarawa West Senatorial District<br>
+  Powered by Capitaro
+</div>
+
+<script>
+  // ── STATE ──
+  let currentCode = null;
+  let currentLocation = null;
+
+  // ── LOCAL ACHIEVEMENT DATA ──
+  const ACHIEVEMENTS = {
+    human: {
+      tag: 'HUMAN CAPITAL',
+      text: `Senator Wadada has made education and health his personal mission for Nasarawa West.\n\n📚 EDUCATION\n• Paid WAEC exam fees for 744 students (2023) — ₦25 million\n• Paid NABTEB fees for 500 students (2024) — ₦25 million\n• Constructed and renovated classrooms at A.A. Sule Memorial Primary School (Keffi), GSS Kube-Panda (Karu), AZA Primary School (Nasarawa), Toto West Primary School, and Zamata Primary School (Gadabuke)\n• 28 blocks of classrooms built across the senatorial zone\n• Founded the Wadada Education Foundation — scholarships for Nasarawa students\n\n🏥 HEALTH\n• Donated hospital equipment to 10 General Hospitals across Keffi, Karu, Nasarawa and Toto LGAs\n• Built new Primary Healthcare Centres in Ganuwa (Keffi), Ajuye (Kokona), Ittah, Aisa and Loko (Nasarawa LGA)\n• Donated ₦2 million to FMC Keffi for emergency beds\n• Medical outreach including minor surgeries across Nasarawa West (2025)\n\n💪 YOUTH & WOMEN\n• 80+ pensionable jobs secured in Police, Army, NSCDC, NBS, and Federal Agencies\n• 106 tablet computers + ₦100,000 startup packs for 106 women\n• Capacity building programmes across all 5 LGAs`
+    },
+    energy: {
+      tag: 'ENERGY & MINERALS',
+      text: `Senator Wadada is unlocking Nasarawa's enormous natural wealth and fighting the power crisis.\n\n⚡ ELECTRICITY\n• Approved 20 units of 500KVA transformers installed across Keffi, Karu, Kokona, Nasarawa, and Toto (2025 Constituency Projects)\n• 478 solar streetlights installed across towns and villages in Nasarawa West\n• 13 motorised boreholes with solar power systems (2025 budget)\n\n⛏️ MINERAL RESOURCES (HEARTS Agenda Vision)\n• Sponsored the Federal Polytechnic Nasarawa Upgrade Bill — to convert it into a Federal University of Mining, Engineering & Technology, directly harnessing Nasarawa's mineral wealth\n• Nasarawa State is home to lithium, barite, lead, zinc, iron ore, copper and gemstones\n• As Governor, Wadada will attract international mining investment and ensure host communities benefit from Nasarawa's underground wealth\n• Facilitated the 118km Keffi-Nasarawa-Toto Road — critical corridor for Nasarawa's growing lithium industry`
+    },
+    agriculture: {
+      tag: 'AGRICULTURE',
+      text: `Senator Wadada has personally put food on tables and tools in farmers' hands across all 59 wards.\n\n🌾 FOOD DISTRIBUTION\n• 10,000 bags of rice (12kg each) distributed to all 59 wards — 100 bags per ward — plus religious groups, security agencies and tribal stakeholders (2024)\n• Rice also distributed during Eid-Fitr, Eid-Kabir and Christmas 2023, 2024 and 2025\n\n🚜 FARM INPUTS & EQUIPMENT\n• 190 farmers received 15kg seedlings (maize, sorghum, guinea corn), herbicides and pesticides (2024)\n• 105 farm harvesters distributed to farmers across the zone\n• 71 irrigation pump sets distributed\n• Large-scale distribution of farm inputs for wet and dry season farming\n\n🏛️ LEGISLATIVE ACTION\n• Sponsored the Agricultural Research Council of Nigeria Amendment Bill — establishing the School of Fishery & Aquatic Sciences at Umaisha, Toto LGA — now passed into law\n• Member of the Senate Committee on Agriculture Production, Services & Rural Development\n• Member of the Senate Committee on Agriculture Colleges & Institutions\n\n🌱 HEARTS AGENDA VISION\n• As Governor: modernise farming, promote green economy, climate-smart agriculture, rural job creation, end-to-end support for Nasarawa farmers`
+    },
+    rural: {
+      tag: 'RURAL DEVELOPMENT',
+      text: `Senator Wadada has fought for roads, water and infrastructure that connect Nasarawa communities to opportunity.\n\n🛣️ ROADS\n• Facilitated the construction of the 118km Keffi-Nasarawa-Toto Road — a major inter-state corridor linking Nasarawa and the FCT, supporting commerce and the lithium industry\n• Keffi-Gunduma-Gitata-Kwoi Road: erosion repairs at Gitata Bridge, potholes from Papari through Tattara to Bade\n• Keffi-Laminga-Nasarawa Road: road wash repairs at Pyanku, El-Kabir Estate and Marmara\n• Nasarawa-Toto-Abaji Road: collapsed bridges fixed at Kurudu, Sauka, Gudun Karya and Buga\n• 11km road + 35-pan bridge at Karshi Jeje, Takalafia (Karu LGA) and Ara Road (Nasarawa LGA)\n• Motion for flyover at Total Roundabout, Keffi — to ease Nasarawa West's worst traffic bottleneck\n\n💧 WATER\n• 39 motorised boreholes and hand pumps installed across all 5 LGAs — Kofar Hausa, Angwan Tofa, Gidan Zakara Primary School, High Court Keffi, Saka Town, Uke Town (Karu), GSS Toto West, Gadabuke and more\n\n🏘️ COMMUNITIES\n• Donated to rebuild homes after attacks in Tattara, Panda, Gwagyi, Udege and Kurudu communities\n• Supported victims of fire, communal crises and floods across the zone`
+    },
+    trade: {
+      tag: 'TRADE & ECONOMY',
+      text: `Senator Wadada brings private sector experience and legislative muscle to grow Nasarawa's economy.\n\n📋 KEY BILLS PASSED\n• Nigeria Investment Promotion Commission Amendment Bill (2023) — to make Nasarawa West more attractive to business and investors\n• Federal Airports Authority Amendment Bill (2024) — supporting aviation and logistics\n• Audit Service Bill (2023) — strengthening financial accountability across government\n• Federal Land Registry Miscellaneous Provisions Act (2023)\n• FCT Satellite Towns Development Commission Bill — creating a fund to develop Mararaba-Karu and surrounding communities\n\n🏭 INDUSTRIAL LEADERSHIP\n• Chairman, Board of Directors, PAN Nigeria Limited (2020–2023) — Peugeot Automobile Nigeria, one of Nigeria's largest manufacturing operations\n• Pioneer Chairman, House Committee on Capital Market & Institutions (2003–2010) — shaped Nigeria's financial markets\n• Member, NESG Policy Commission, Non-Oil/Non-Agriculture Sectors (2006–2011)\n• Member, Senate Committee on Trade & Investments\n\n💼 HEARTS AGENDA VISION\n• As Governor: attract local and foreign investors, diversify Nasarawa's economy, create thousands of jobs, develop SME ecosystem and leverage solid minerals for industrial growth\n\n🏆 30+ national and international awards for service, governance and community development`
+    },
+    security: {
+      tag: 'SECURITY',
+      text: `Senator Wadada has acted on security — in the chamber and on the ground.\n\n🛡️ LEGISLATIVE ACTION\n• Motion on clearing illegal drop-off and pick-up points in Abuja to ensure emergency vehicles can reach crisis scenes without delay\n• Member, Senate Committee on Oil & Gas Host Community Security\n• Former Member, House Committee on National Security & Intelligence (2003–2010)\n• Former Member, House Committee on Police Affairs (2010–2011)\n\n🤝 COMMUNITY SUPPORT\n• Donated ₦2 million to Tattara community of Panda (Karu LGA) after tragic attack by unknown assailants\n• Donated ₦2 million to Panda community fire incident victims\n• Donated ₦3 million to Gwagyi community (Kurudu, Nasarawa LGA) for crisis victims to rebuild homes\n• Donated ₦2.5 million to Fulani community (Kurudu) affected by communal crisis\n• Donated ₦2 million to two Udege community groups during community crisis\n\n👮 POLICING & EMPLOYMENT\n• Secured pensionable jobs for youth in Nigeria Police Force, Nigeria Army and NSCDC across the senatorial zone\n\n🔒 HEARTS AGENDA VISION\n• As Governor: protect men, women and children across all 13 LGAs — modern community policing, intelligence infrastructure and peace-building across Nasarawa State`
+    }
+  };
+
+  // ── SCREENS ──
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('loadingScreen').classList.remove('active');
+    const el = document.getElementById(id);
+    if (el) el.classList.add('active');
+    window.scrollTo(0, 0);
+  }
+
+  function showLoading(text) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    const ls = document.getElementById('loadingScreen');
+    ls.classList.add('active');
+    document.getElementById('loadingText').textContent = text || 'Searching Wadada\'s record...';
+    window.scrollTo(0, 0);
+  }
+
+  // ── CODE SUBMISSION ──
+  async function submitCode() {
+    const raw = document.getElementById('codeInput').value.trim().toUpperCase();
+    const errEl = document.getElementById('codeError');
+    const input = document.getElementById('codeInput');
+
+    if (!raw) {
+      errEl.textContent = 'Please enter a code from the sticker.';
+      input.classList.add('error');
+      setTimeout(() => input.classList.remove('error'), 600);
+      return;
+    }
+
+    errEl.textContent = '';
+    showLoading('Registering your scan...');
+
+    try {
+      const resp = await fetch('/api/scan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: raw })
+      });
+      const data = await resp.json();
+
+      if (data.success) {
+        currentCode = raw;
+        currentLocation = data.location || null;
+        goToTopics();
+      } else {
+        showScreen('screen1');
+        errEl.textContent = 'Code not recognised. Check and try again.';
+        input.classList.add('error');
+        setTimeout(() => input.classList.remove('error'), 600);
+      }
+    } catch (e) {
+      // If API unavailable, still proceed (graceful fallback)
+      currentCode = raw;
+      goToTopics();
+    }
+  }
+
+  document.getElementById('codeInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') submitCode();
+  });
+
+  // ── NAVIGATION ──
+  function goToTopics() { showScreen('screen2'); }
+  function resetToTopics() { showScreen('screen2'); }
+
+  // ── TOPIC SELECTION (local data) ──
+  function selectTopic(key) {
+    const data = ACHIEVEMENTS[key];
+    if (!data) return;
+
+    // Log scan topic if we have a code
+    if (currentCode) {
+      fetch('/api/scan-topic', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: currentCode, topic: key })
+      }).catch(() => {});
+    }
+
+    showResult(data.tag, formatText(data.text));
+  }
+
+  function formatText(raw) {
+    return raw
+      .split('\n')
+      .map(line => {
+        if (line.trim() === '') return '<br>';
+        if (line.startsWith('•')) {
+          return '<div style="display:flex;gap:8px;margin:4px 0;"><span style="color:var(--green);flex-shrink:0;">•</span><span>' + line.slice(1).trim() + '</span></div>';
+        }
+        if (/^[📚🏥💪⚡⛏️🛣️💧🏘️🌾🚜🏛️🌱📋🏭💼🏆🛡️🤝👮🔒]/.test(line.trim())) {
+          return '<div style="font-weight:700;color:var(--dark);margin:14px 0 6px;">' + line + '</div>';
+        }
+        return '<p style="margin:4px 0;">' + line + '</p>';
+      })
+      .join('');
+  }
+
+  // ── FREE TEXT (API) ──
+  async function askFree() {
+    const q = document.getElementById('freeInput').value.trim();
+    if (!q) return;
+
+    showLoading('Checking Wadada\'s record...');
+
+    try {
+      const resp = await fetch('/api/ask', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question: q, code: currentCode || null })
+      });
+      const data = await resp.json();
+      showResult('YOUR QUESTION', formatText(data.answer || 'No answer available.'));
+    } catch (e) {
+      showResult('YOUR QUESTION', 'Unable to reach the server. Please try again or select a topic above.');
+    }
+  }
+
+  document.getElementById('freeInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') askFree();
+  });
+
+  // ── SHOW RESULT ──
+  function showResult(tag, html) {
+    document.getElementById('resultTag').textContent = tag;
+    document.getElementById('resultText').innerHTML = html;
+
+    const shareUrl = 'https://the-wadada-way.pages.dev/scan';
+    const shareText = `Senator Wadada has delivered for Nasarawa West!\n\nSee his full record: ${shareUrl}`;
+    document.getElementById('whatsappBtn').href =
+      'https://wa.me/?text=' + encodeURIComponent(shareText);
+
+    showScreen('screen3');
+  }
+</script>
+</body>
+</html>

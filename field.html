@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>The Wadada Way — Field Agent</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --green: #006400; --green2: #004d00;
+      --red: #CC0000; --gold: #C9A84C;
+      --white: #FFFFFF; --offwhite: #F5F5F0;
+      --dark: #1A1A1A; --grey: #666666;
+      --lightgrey: #E8E8E0;
+    }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: var(--offwhite);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .top-band {
+      width: 100%; background: var(--green);
+      padding: 10px 16px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .top-band .title { font-size: 14px; font-weight: 700; color: var(--white); }
+    .top-band .badge { font-size: 11px; color: var(--gold); font-weight: 600; letter-spacing: 1px; }
+
+    .container { width: 100%; max-width: 420px; padding: 24px 20px 60px; }
+
+    /* LOGIN */
+    #loginView { display: block; }
+    #dashView { display: none; }
+
+    .card {
+      background: var(--white);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      margin-bottom: 16px;
+    }
+    .card-title {
+      font-size: 16px; font-weight: 700;
+      color: var(--dark); margin-bottom: 16px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .card-title .dot {
+      width: 10px; height: 10px;
+      border-radius: 50%; background: var(--green);
+    }
+
+    label { display: block; font-size: 12px; color: var(--grey); margin-bottom: 6px; font-weight: 600; letter-spacing: 0.5px; }
+    input[type=text], input[type=password], select, textarea {
+      width: 100%;
+      padding: 12px 14px;
+      font-size: 15px;
+      border: 2px solid var(--lightgrey);
+      border-radius: 10px;
+      background: var(--offwhite);
+      color: var(--dark);
+      outline: none;
+      transition: border-color 0.2s;
+      margin-bottom: 14px;
+    }
+    input:focus, select:focus, textarea:focus { border-color: var(--green); background: var(--white); }
+    textarea { resize: none; height: 80px; font-size: 14px; }
+
+    .btn {
+      width: 100%; padding: 14px;
+      font-size: 15px; font-weight: 700;
+      border: none; border-radius: 10px;
+      cursor: pointer; transition: all 0.18s;
+    }
+    .btn-primary { background: var(--green); color: var(--white); }
+    .btn-primary:hover { background: var(--green2); }
+    .btn-primary:active { transform: scale(0.97); }
+    .btn-secondary { background: transparent; border: 2px solid var(--green); color: var(--green); margin-top: 10px; }
+
+    .error-msg { color: var(--red); font-size: 13px; text-align: center; margin-top: 8px; min-height: 20px; }
+    .success-msg { color: var(--green); font-size: 13px; text-align: center; margin-top: 8px; min-height: 20px; }
+
+    /* AGENT INFO */
+    .agent-banner {
+      background: linear-gradient(135deg, var(--green2), var(--green));
+      border-radius: 14px;
+      padding: 16px 20px;
+      margin-bottom: 16px;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .agent-avatar {
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      background: rgba(201,168,76,0.3);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; font-weight: 700; color: var(--gold);
+      flex-shrink: 0;
+    }
+    .agent-name { font-size: 15px; font-weight: 700; color: var(--white); }
+    .agent-id { font-size: 12px; color: var(--gold); margin-top: 2px; }
+
+    /* STATS ROW */
+    .stats-row {
+      display: grid; grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px; margin-bottom: 16px;
+    }
+    .stat-card {
+      background: var(--white);
+      border-radius: 12px;
+      padding: 14px 10px;
+      text-align: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    }
+    .stat-num { font-size: 24px; font-weight: 800; color: var(--green); }
+    .stat-label { font-size: 10px; color: var(--grey); margin-top: 2px; }
+
+    /* DEPLOYMENTS LIST */
+    .deploy-list { list-style: none; }
+    .deploy-item {
+      padding: 12px 0;
+      border-bottom: 1px solid var(--lightgrey);
+      display: flex; justify-content: space-between; align-items: flex-start;
+    }
+    .deploy-item:last-child { border-bottom: none; }
+    .deploy-code { font-size: 14px; font-weight: 700; color: var(--green); font-family: monospace; }
+    .deploy-loc { font-size: 12px; color: var(--dark); margin-top: 2px; }
+    .deploy-lga { font-size: 11px; color: var(--grey); }
+    .deploy-scans { font-size: 12px; color: var(--grey); text-align: right; }
+    .deploy-scans strong { color: var(--dark); }
+
+    /* SECTION DIVIDER */
+    .section-title {
+      font-size: 13px; font-weight: 700;
+      color: var(--grey); letter-spacing: 1px;
+      text-transform: uppercase;
+      margin: 20px 0 10px;
+    }
+
+    .logout-link {
+      text-align: center; margin-top: 20px;
+    }
+    .logout-link a {
+      color: var(--grey); font-size: 13px;
+      text-decoration: underline; cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+<div class="top-band">
+  <span class="title">🌿 Field Agent Portal</span>
+  <span class="badge">THE WADADA WAY</span>
+</div>
+
+<!-- LOGIN VIEW -->
+<div id="loginView" class="container">
+  <div style="text-align:center; padding: 30px 0 20px;">
+    <div style="font-size: 48px; margin-bottom: 12px;">📋</div>
+    <div style="font-size: 20px; font-weight: 800; color: var(--dark);">Agent Login</div>
+    <div style="font-size: 13px; color: var(--grey); margin-top: 6px;">Enter your agent name and PIN to continue</div>
+  </div>
+
+  <div class="card">
+    <label>YOUR NAME</label>
+    <input type="text" id="agentName" placeholder="Full name" autocomplete="name">
+
+    <label>AGENT PIN</label>
+    <input type="password" id="agentPin" placeholder="••••" maxlength="8" inputmode="numeric">
+
+    <button class="btn btn-primary" onclick="doLogin()">LOGIN</button>
+    <div class="error-msg" id="loginError"></div>
+  </div>
+</div>
+
+<!-- DASHBOARD VIEW -->
+<div id="dashView" class="container">
+
+  <div class="agent-banner">
+    <div class="agent-avatar" id="agentInitial">A</div>
+    <div>
+      <div class="agent-name" id="agentDisplayName">Agent</div>
+      <div class="agent-id" id="agentDisplayId">Loading...</div>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-num" id="statTotal">0</div>
+      <div class="stat-label">Stickers<br>Deployed</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="statScans">0</div>
+      <div class="stat-label">Total<br>Scans</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="statActive">0</div>
+      <div class="stat-label">Active<br>Locations</div>
+    </div>
+  </div>
+
+  <!-- REGISTER NEW STICKER -->
+  <div class="section-title">Register New Sticker</div>
+  <div class="card">
+    <div class="card-title"><div class="dot"></div>Attach Code to Location</div>
+
+    <label>STICKER CODE</label>
+    <input type="text" id="newCode" placeholder="e.g. NW-047" style="text-transform:uppercase;font-weight:700;letter-spacing:2px;font-size:17px;">
+
+    <label>LOCATION NAME</label>
+    <input type="text" id="newLocation" placeholder="e.g. Kasuwan Keffi Market Entrance">
+
+    <label>LGA</label>
+    <select id="newLGA">
+      <option value="">-- Select LGA --</option>
+      <option>Keffi</option>
+      <option>Karu</option>
+      <option>Kokona</option>
+      <option>Nasarawa</option>
+      <option>Toto</option>
+    </select>
+
+    <label>WARD</label>
+    <input type="text" id="newWard" placeholder="e.g. Keffi East Ward">
+
+    <label>NOTES (optional)</label>
+    <textarea id="newNotes" placeholder="e.g. Pasted on market gate pillar, eye level"></textarea>
+
+    <button class="btn btn-primary" onclick="registerSticker()">REGISTER STICKER</button>
+    <div class="error-msg" id="registerError"></div>
+    <div class="success-msg" id="registerSuccess"></div>
+  </div>
+
+  <!-- MY DEPLOYMENTS -->
+  <div class="section-title">My Deployments</div>
+  <div class="card">
+    <div class="card-title"><div class="dot"></div>Locations You Have Registered</div>
+    <ul class="deploy-list" id="deployList">
+      <li style="color:var(--grey);font-size:13px;padding:12px 0;">Loading your deployments...</li>
+    </ul>
+  </div>
+
+  <div class="logout-link">
+    <a onclick="doLogout()">← Logout</a>
+  </div>
+
+</div>
+
+<script>
+  const AGENT_PIN = '3352';
+  let agentName = '';
+  let agentId = '';
+  let deployments = [];
+
+  // ── LOGIN ──
+  function doLogin() {
+    const name = document.getElementById('agentName').value.trim();
+    const pin = document.getElementById('agentPin').value.trim();
+    const errEl = document.getElementById('loginError');
+
+    if (!name) { errEl.textContent = 'Please enter your name.'; return; }
+    if (pin !== AGENT_PIN) { errEl.textContent = 'Incorrect PIN. Try again.'; return; }
+
+    agentName = name;
+    agentId = 'AGT-' + name.toUpperCase().replace(/\s+/g, '').substring(0, 4) + '-' + Date.now().toString().slice(-4);
+
+    sessionStorage.setItem('wadada_agent', JSON.stringify({ name, id: agentId }));
+
+    document.getElementById('agentInitial').textContent = name.charAt(0).toUpperCase();
+    document.getElementById('agentDisplayName').textContent = name;
+    document.getElementById('agentDisplayId').textContent = agentId;
+
+    document.getElementById('loginView').style.display = 'none';
+    document.getElementById('dashView').style.display = 'block';
+
+    loadDeployments();
+  }
+
+  document.getElementById('agentPin').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') doLogin();
+  });
+
+  // ── LOGOUT ──
+  function doLogout() {
+    sessionStorage.removeItem('wadada_agent');
+    document.getElementById('loginView').style.display = 'block';
+    document.getElementById('dashView').style.display = 'none';
+    document.getElementById('agentPin').value = '';
+    document.getElementById('loginError').textContent = '';
+  }
+
+  // ── CHECK SESSION ──
+  (function checkSession() {
+    const saved = sessionStorage.getItem('wadada_agent');
+    if (saved) {
+      try {
+        const s = JSON.parse(saved);
+        agentName = s.name; agentId = s.id;
+        document.getElementById('agentInitial').textContent = agentName.charAt(0).toUpperCase();
+        document.getElementById('agentDisplayName').textContent = agentName;
+        document.getElementById('agentDisplayId').textContent = agentId;
+        document.getElementById('loginView').style.display = 'none';
+        document.getElementById('dashView').style.display = 'block';
+        loadDeployments();
+      } catch(e) {}
+    }
+  })();
+
+  // ── REGISTER STICKER ──
+  async function registerSticker() {
+    const code = document.getElementById('newCode').value.trim().toUpperCase();
+    const location = document.getElementById('newLocation').value.trim();
+    const lga = document.getElementById('newLGA').value;
+    const ward = document.getElementById('newWard').value.trim();
+    const notes = document.getElementById('newNotes').value.trim();
+
+    const errEl = document.getElementById('registerError');
+    const succEl = document.getElementById('registerSuccess');
+    errEl.textContent = ''; succEl.textContent = '';
+
+    if (!code) { errEl.textContent = 'Enter the sticker code.'; return; }
+    if (!location) { errEl.textContent = 'Enter a location name.'; return; }
+    if (!lga) { errEl.textContent = 'Select the LGA.'; return; }
+
+    try {
+      const resp = await fetch('/api/register-sticker', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code, location, lga, ward, notes, agent: agentName, agentId })
+      });
+      const data = await resp.json();
+
+      if (data.success) {
+        succEl.textContent = `✅ ${code} registered to "${location}"`;
+        document.getElementById('newCode').value = '';
+        document.getElementById('newLocation').value = '';
+        document.getElementById('newLGA').value = '';
+        document.getElementById('newWard').value = '';
+        document.getElementById('newNotes').value = '';
+        loadDeployments();
+      } else {
+        errEl.textContent = data.error || 'Registration failed. Try again.';
+      }
+    } catch(e) {
+      errEl.textContent = 'Network error. Please try again.';
+    }
+  }
+
+  // ── LOAD DEPLOYMENTS ──
+  async function loadDeployments() {
+    try {
+      const resp = await fetch(`/api/agent-deployments?agentId=${encodeURIComponent(agentId)}`);
+      const data = await resp.json();
+      deployments = data.deployments || [];
+      renderDeployments();
+      updateStats();
+    } catch(e) {
+      document.getElementById('deployList').innerHTML =
+        '<li style="color:var(--grey);font-size:13px;padding:12px 0;">Could not load deployments. Check connection.</li>';
+    }
+  }
+
+  function renderDeployments() {
+    const list = document.getElementById('deployList');
+    if (!deployments.length) {
+      list.innerHTML = '<li style="color:var(--grey);font-size:13px;padding:12px 0;">No stickers registered yet. Register your first above.</li>';
+      return;
+    }
+    list.innerHTML = deployments.map(d => `
+      <li class="deploy-item">
+        <div>
+          <div class="deploy-code">${d.code}</div>
+          <div class="deploy-loc">${d.location}</div>
+          <div class="deploy-lga">${d.lga}${d.ward ? ' · ' + d.ward : ''}</div>
+        </div>
+        <div class="deploy-scans">
+          <strong>${d.scans || 0}</strong><br>scans
+        </div>
+      </li>
+    `).join('');
+  }
+
+  function updateStats() {
+    document.getElementById('statTotal').textContent = deployments.length;
+    const totalScans = deployments.reduce((s, d) => s + (d.scans || 0), 0);
+    document.getElementById('statScans').textContent = totalScans;
+    const active = deployments.filter(d => (d.scans || 0) > 0).length;
+    document.getElementById('statActive').textContent = active;
+  }
+</script>
+</body>
+</html>
